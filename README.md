@@ -1,8 +1,8 @@
 Team – Pace Coders
-Vardhan Kathi
-Chandu Kopparthy
-Nagarjuna Varikuti
-Vardhan Kunchala
+Vardhan Kathi,
+Chandu Kopparthy,
+Nagarjuna Varikuti,
+Vardhan Kunchala,
 
 Vision-Landing Drone:
 About the Project
