@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AegisNode — AI Drone Landing Command</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <a href="#" class="brand">
+      <div class="brand-logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <span class="brand-title">AegisNode Drone Command</span>
+    </a>
+    
+    <div class="api-controls">
+      <div class="key-input-container">
+        <input type="password" id="apiKeyInput" class="key-input" placeholder="X-API-KEY (aff_live_...)">
+        <svg id="toggleKeyVisibility" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </div>
+      <button id="connectBtn" class="btn">Connect API</button>
+      <div class="status-indicator">
+        <span id="connectionDot" class="status-dot simulated"></span>
+        <span id="connectionText">Simulated Telemetry</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Dashboard -->
+  <main class="dashboard">
+
+    <!-- Tabs Navigation -->
+    <div class="tabs-nav" style="margin-bottom: 1.5rem; justify-content: flex-start; padding: 0;">
+      <button class="tab-btn active" id="tabBtnDashboard">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="9"></rect>
+          <rect x="14" y="3" width="7" height="5"></rect>
+          <rect x="14" y="12" width="7" height="9"></rect>
+          <rect x="3" y="16" width="7" height="5"></rect>
+        </svg>
+        Command Center
+      </button>
+      <button class="tab-btn" id="tabBtnConfidence">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M12 8v4"/>
+          <path d="M12 16h.01"/>
+        </svg>
+        Landing Confidence Page
+      </button>
+    </div>
+
+    <!-- Unified Dashboard Grid (Tab 1) -->
+    <div class="tab-content active" id="pageDashboard" style="display: grid; grid-template-columns: repeat(12, 1fr); row-gap: 2.25rem; column-gap: 1.75rem;">
+      
+      <!-- Info Guide Banner -->
+      <div class="info-banner grid-col-12" id="infoGuideBanner">
+        <button class="info-banner-close" id="closeInfoBannerBtn" aria-label="Close guide">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+        <div class="info-banner-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          Quick Guide: AegisNode Telemetry Closed-Loop Workflow
+        </div>
+        <div class="info-banner-columns">
+          <div class="info-banner-col">
+            <div class="info-banner-step">1. Telemetry Capture</div>
+            <div class="info-banner-label">Sensory Modalities</div>
+            <div class="info-banner-desc">Polls real-time streams across four diagnostic dimensions: Bounding boxes (Vision), Altitude (Spatial), Wind knots (Environmental), and Battery level (Interoception).</div>
+          </div>
+          <div class="info-banner-col">
+            <div class="info-banner-step">2. Safety Reasoning</div>
+            <div class="info-banner-label">AI Decision Engine</div>
+            <div class="info-banner-desc">Evaluates landing safety criteria at 1Hz. Assesses wind limits (15 kn), battery thresholds (20%), and obstacle presence, printing its thought logs below.</div>
+          </div>
+          <div class="info-banner-col">
+            <div class="info-banner-step">3. Actuator Relay</div>
+            <div class="info-banner-label">Command Execution</div>
+            <div class="info-banner-desc">Triggers actuation commands to control the physical hardware, including setting motor rates (hover, land, stabilize), deploying landing gear, or activating warning strobes.</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Metrics row -->
+      <div class="metrics-row grid-col-12">
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">Telemetry Source</span>
+            <div class="metric-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              </svg>
+            </div>
+          </div>
+          <span id="apiModalityVal" class="metric-value">Simulated Loop</span>
+          <span id="apiModalitySub" class="metric-sub">Using local mock client</span>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">Tokens Consumed</span>
+            <div class="metric-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                <polyline points="2 17 12 22 22 17"/>
+              </svg>
+            </div>
+          </div>
+          <span id="tokensConsumedVal" class="metric-value">0</span>
+          <span id="tokensRemainingVal" class="metric-sub">10,000 tokens remaining</span>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">Telemetry Rate</span>
+            <div class="metric-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </div>
+          </div>
+          <span id="telemetryRateVal" class="metric-value">1.0 Hz</span>
+          <span class="metric-sub">Polling interval: 1000ms</span>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">Node Connection</span>
+            <div class="metric-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+            </div>
+          </div>
+          <span id="globalHealthVal" class="metric-value">91%</span>
+          <span id="networkLatencyVal" class="metric-sub">Latency: 12ms (Normal)</span>
+        </div>
+      </div>
+
+
+
+      <!-- Live Feed Visualizer -->
+      <div class="card grid-col-8">
+        <div class="card-title-bar">
+          <h2 class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            Drone Optics / landing zone scan
+          </h2>
+          <div class="status-indicator">
+            <span id="droneSafetyDot" class="status-dot error"></span>
+            <span id="droneSafetyText">Landing Unsafe</span>
+          </div>
+        </div>
+        
+        <div class="canvas-wrapper">
+          <canvas id="droneCanvas"></canvas>
+          <div class="radar-sweep"></div>
+        </div>
+      </div>
+
+      <!-- Actuators Panel -->
+      <div class="card grid-col-4">
+        <div class="card-title-bar">
+          <h2 class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <circle cx="12" cy="12" r="6"/>
+              <circle cx="12" cy="12" r="2"/>
+            </svg>
+            Flight Actuators
+          </h2>
+        </div>
+
+        <div class="actuators-grid" style="margin-bottom: 1.5rem;">
+          <div class="actuator-card" id="actDroneMotors">
+            <div class="actuator-info">
+              <span class="actuator-name">Rotors/Motors</span>
+              <span class="actuator-status" id="actDroneMotorsStatus">OFF</span>
+            </div>
+            <button class="actuator-toggle-btn" id="toggleDroneMotors">Arm Motors</button>
+          </div>
+
+          <div class="actuator-card" id="actDroneLandingGear">
+            <div class="actuator-info">
+              <span class="actuator-name">Landing Gear</span>
+              <span class="actuator-status" id="actDroneLandingGearStatus">RETRACTED</span>
+            </div>
+            <button class="actuator-toggle-btn" id="toggleDroneLandingGear">Deploy Gear</button>
+          </div>
+
+          <div class="actuator-card active" id="actDroneAutopilot">
+            <div class="actuator-info">
+              <span class="actuator-name">Auto-Landing System</span>
+              <span class="actuator-status active" id="actDroneAutopilotStatus">ACTIVE</span>
+            </div>
+            <button class="actuator-toggle-btn active" id="toggleDroneAutopilot">Override Manual</button>
+          </div>
+
+          <div class="actuator-card" id="actDroneBeacon">
+            <div class="actuator-info">
+              <span class="actuator-name">Warning Beacon</span>
+              <span class="actuator-status" id="actDroneBeaconStatus">OFF</span>
+            </div>
+            <button class="actuator-toggle-btn" id="toggleDroneBeacon">Trigger Beacon</button>
+          </div>
+        </div>
+
+        <div class="card-title-bar" style="margin-bottom: 0.75rem; padding-bottom: 0.5rem;">
+          <span class="card-title" style="font-size: 0.8rem; color: var(--text-secondary);">Grounded Telemetry Parameters</span>
+        </div>
+
+        <div class="senses-flex" style="gap: 0.5rem;">
+          <div class="sense-item">
+            <span class="sense-name-tag">Altitude (m)</span>
+            <span class="sense-val" id="droneTelemetryAlt">42.1m</span>
+          </div>
+          <div class="sense-item">
+            <span class="sense-name-tag">Speed (m/s)</span>
+            <span class="sense-val" id="droneTelemetrySpeed">1.4 m/s</span>
+          </div>
+          <div class="sense-item" id="windSpeedAlertItem">
+            <span class="sense-name-tag">Wind Speed (knots)</span>
+            <span class="sense-val" id="droneTelemetryWind">3.1 kn</span>
+          </div>
+          <div class="sense-item" id="batteryAlertItem">
+            <span class="sense-name-tag">Battery Charge (%)</span>
+            <span class="sense-val" id="droneTelemetryBattery">91%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agent Reasoning Box -->
+      <div class="grid-col-12">
+        <div class="agent-reasoning-panel">
+          <div class="agent-header">
+            <div class="agent-title">
+              <div class="agent-pulse"></div>
+              Drone Closed-Loop Decision Engine
+            </div>
+            <span class="font-mono text-muted" style="font-size: 0.75rem;">Modality Target: VISION, SPATIAL, ENVIRONMENTAL, INTEROCEPTION</span>
+          </div>
+          <div class="agent-body" id="droneAgentReasoning">
+            [DroneAgent initialized] Monitoring landing sector...
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Command & Event Terminal -->
+      <div class="card grid-col-12">
+        <div class="card-title-bar">
+          <h2 class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="4 17 10 11 4 5"/>
+              <line x1="12" y1="19" x2="20" y2="19"/>
+            </svg>
+            Live Command & Event Terminal
+          </h2>
+          <button id="clearTerminalBtn" class="btn btn-secondary font-mono" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;">Clear</button>
+        </div>
+        <div class="terminal-window" style="height: 250px;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="terminal-dot-sub red"></span>
+              <span class="terminal-dot-sub yellow"></span>
+              <span class="terminal-dot-sub green"></span>
+            </div>
+            <span class="terminal-title">bash — telemetry@aegisnode-drone</span>
+            <span class="font-mono text-muted" style="font-size:0.7rem">CTRL+C to halt</span>
+          </div>
+          <div class="terminal-body" id="terminalLog">
+            <div class="terminal-row">
+              <span class="term-time">[17:30:23]</span>
+              <span class="term-tag info">[SYSTEM]</span>
+              <span class="term-msg">AegisNode Drone Command Server booted on port 8888...</span>
+            </div>
+            <div class="terminal-row">
+              <span class="term-time">[17:30:23]</span>
+              <span class="term-tag info">[SYSTEM]</span>
+              <span class="term-msg">Afferens client mapped to GET /api/perception & POST /api/actuation.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Landing Confidence Diagnostics Grid (Tab 2) -->
+    <div class="tab-content" id="pageConfidence" style="display: none; grid-template-columns: repeat(12, 1fr); row-gap: 2.25rem; column-gap: 1.75rem;">
+      
+      <!-- Live Drone Perception Feed -->
+      <div class="card grid-col-8">
+        <div class="card-title-bar">
+          <h2 class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            Live Drone Perception Feed
+          </h2>
+          <div class="status-indicator">
+            <span id="confidenceDroneSafetyDot" class="status-dot error"></span>
+            <span id="confidenceDroneSafetyText">Landing Unsafe</span>
+          </div>
+        </div>
+        
+        <div class="canvas-wrapper">
+          <canvas id="confidenceDroneCanvas"></canvas>
+          <div class="radar-sweep"></div>
+        </div>
+      </div>
+
+      <!-- Diagnostic Score Gauge -->
+      <div class="card grid-col-4" style="display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 380px;">
+        <div class="card-title-bar" style="width: 100%;">
+          <h2 class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 8v4"/>
+              <path d="M12 16h.01"/>
+            </svg>
+            Safety Rating
+          </h2>
+        </div>
+        
+        <div class="progress-gauge-container">
+          <svg class="progress-gauge-svg" viewBox="0 0 200 200">
+            <circle class="progress-gauge-bg" cx="100" cy="100" r="85" fill="none" stroke="rgba(0,0,0,0.06)" stroke-width="12"></circle>
+            <circle class="progress-gauge-fill" id="confidenceGaugeCircle" cx="100" cy="100" r="85" fill="none" stroke="var(--info)" stroke-width="12" stroke-dasharray="534" stroke-dashoffset="534" transform="rotate(-90 100 100)" stroke-linecap="round"></circle>
+          </svg>
+          <div class="progress-gauge-value">
+            <span class="progress-gauge-number" id="confidencePercentageVal">100%</span>
+            <span class="progress-gauge-label">Confidence</span>
+          </div>
+        </div>
+
+        <div class="confidence-state-badge optimal" id="confidenceStatusBadge">
+          Optimal Landing Zone
+        </div>
+      </div>
+
+      <!-- Score Breakdown & Calculations -->
+      <div class="card grid-col-12">
+        <div class="card-title-bar">
+          <h2 class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            Modality Impact Diagnostics
+          </h2>
+          <span class="font-mono text-muted" style="font-size: 0.75rem;">Live Mathematical Breakdown</span>
+        </div>
+
+        <table class="diag-details-table">
+          <thead>
+            <tr>
+              <th>Sensory Modality</th>
+              <th>Current Parameter</th>
+              <th>System Target</th>
+              <th>Impact Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Vision</strong></td>
+              <td id="diagVisionParam">No Obstacles</td>
+              <td>0 Objects inside Zone</td>
+              <td class="diag-score-change positive" id="diagVisionImpact">+35%</td>
+            </tr>
+            <tr>
+              <td><strong>Environmental</strong></td>
+              <td id="diagEnvParam">3.1 kn</td>
+              <td>&lt; 15 knots Wind</td>
+              <td class="diag-score-change positive" id="diagEnvImpact">+25%</td>
+            </tr>
+            <tr>
+              <td><strong>Interoception</strong></td>
+              <td id="diagIntParam">91% Battery</td>
+              <td>&gt; 20% Battery Level</td>
+              <td class="diag-score-change positive" id="diagIntImpact">+25%</td>
+            </tr>
+            <tr>
+              <td><strong>Spatial</strong></td>
+              <td id="diagSpatialParam">42.1 m</td>
+              <td>Aligned Coordinates</td>
+              <td class="diag-score-change positive" id="diagSpatialImpact">+15%</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+          <h3 style="font-size: 0.9rem; margin-bottom: 0.5rem; font-weight: 600;">How Confidence is Calculated:</h3>
+          <p style="font-size: 0.8rem; line-height: 1.5; color: var(--text-secondary);">
+            The landing confidence is a composite index updated at 1Hz based on four streams:
+            obstacles detected by computer vision subtract 70% from baseline; high wind speeds subtract up to 50% 
+            relative to safety parameters; battery capacity below 20% drops general reliability by 40%. The landing autopilot overrides 
+            automatically if total safety rating dips below 50%.
+          </p>
+        </div>
+      </div>
+
+      <!-- Modalities Explanation -->
+      <div class="card grid-col-12">
+        <div class="card-title-bar">
+          <h2 class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+              <line x1="4" y1="22" x2="4" y2="15"/>
+            </svg>
+            Perceptual Modality Descriptions
+          </h2>
+        </div>
+        
+        <div class="modality-desc-list">
+          <div class="modality-desc-item">
+            <div class="modality-desc-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+            <div class="modality-desc-content">
+              <span class="modality-desc-title">VISION Modality</span>
+              <span class="modality-desc-text">Processes raw camera feeds to detect bounding boxes of objects. If obstacles like forklifts or personnel are inside the envelope, the landing pad is flagged unsafe, and a heavy confidence penalty is enforced to prevent collision.</span>
+            </div>
+          </div>
+          
+          <div class="modality-desc-item">
+            <div class="modality-desc-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 12a11.02 11.02 0 0 1-21 0c0-1.87 1.83-3 3-3a3 3 0 0 1 6 0c1 0 2 1.25 2 3a2 2 0 0 0 4 0c0-1.75 1-3 2-3a3 3 0 0 1 3 3c1.17 0 1 1.13 1 3z"/></svg>
+            </div>
+            <div class="modality-desc-content">
+              <span class="modality-desc-title">ENVIRONMENTAL Modality</span>
+              <span class="modality-desc-text">Monitors localized ambient atmospheric parameters, primarily wind speed. Wind speeds exceeding 15 knots introduce extreme drift risk, resulting in automatic aborts and holding patterns until conditions settle.</span>
+            </div>
+          </div>
+
+          <div class="modality-desc-item">
+            <div class="modality-desc-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="12" rx="2" ry="2"/><line x1="6" y1="11" x2="6" y2="15"/><line x1="10" y1="11" x2="10" y2="15"/><line x1="14" y1="11" x2="14" y2="15"/><line x1="22" y1="11" x2="22" y2="15"/></svg>
+            </div>
+            <div class="modality-desc-content">
+              <span class="modality-desc-title">INTEROCEPTION Modality</span>
+              <span class="modality-desc-text">Tracks the internal state and system health of the drone hardware. Low battery charge levels (&lt; 20%) mandate emergency overrides, forcing landing gear deployment and initiating immediate touchdown commands.</span>
+            </div>
+          </div>
+
+          <div class="modality-desc-item">
+            <div class="modality-desc-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-2 2v4l2 2 2-2v-4z"/><path d="m7.8 16.2 2-2v-4l-2-2-2 2v4z"/></svg>
+            </div>
+            <div class="modality-desc-content">
+              <span class="modality-desc-title">SPATIAL Modality</span>
+              <span class="modality-desc-text">Monitors precise location telemetry coordinates (Latitude, Longitude, Altitude, heading, and speed). Guides vertical descent speed constraints to confirm structural landing deceleration limits.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <span>AegisNode Drone Command &copy; 2026 Hack Aarambh Submission. Powered by the Afferens Sensory Layer API.</span>
+    <div class="footer-links">
+      <a href="https://afferens.com/docs" target="_blank">Afferens Documentation</a>
+      <a href="https://quackathon.tryproduck.com" target="_blank">Quackathon Portal</a>
+      <a href="#" id="viewSchematicsLink">System Schematic</a>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+  <script src="js/api.js"></script>
+  <script src="js/simulator.js"></script>
+  <script src="js/agent.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
